@@ -1,1 +1,1 @@
-# bookworm-koreader-plugin
+# bookworm-KOReader-plugin
