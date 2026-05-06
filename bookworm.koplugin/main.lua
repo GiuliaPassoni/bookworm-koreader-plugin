@@ -51,13 +51,11 @@ local Bookworm = WidgetContainer:extend{
 
 function Bookworm:init()
     logger.info("Bookworm - init, instance:", tostring(self))
-    _state.showing = false
-    _state.last_resume = 0
     self.ui.menu:registerToMainMenu(self)
     UIManager:scheduleIn(3.0, function()
+        if _state.showing then return end
         ReadHistory:reload(true)
-        if #ReadHistory.hist > 0 and not _state.showing then
-            _state.last_resume = os.time() -- prevent onResume from re-triggering immediately
+        if #ReadHistory.hist > 0 then
             _state.showing = true
             self:showSelector()
         end
@@ -65,20 +63,19 @@ function Bookworm:init()
 end
 
 function Bookworm:onResume()
-    logger.info("Bookworm - onResume fired, instance:", tostring(self))
-    _state.showing = false
+    logger.info("Bookworm - onResume fire")
     local now = os.time()
-    if (now - _state.last_resume) < 5 then
-        logger.info("Bookworm - onResume ignored (too soon)")
+    if (now - _state.last_resume) < 10 then
+        logger.info("Bookworm - ignored, too soon:", now - _state.last_resume, "s")
         return
     end
     _state.last_resume = now
-    logger.info("Bookworm - calling showSelector")
+    _state.showing = false
     ReadHistory:reload(true)
     if #ReadHistory.hist > 0 then
         _state.showing = true
         self:showSelector()
-        logger.info("Bookworm - showSelector returned")
+        logger.info("Bookworm - showSelector called from onResume")
     end
 end
 
@@ -92,10 +89,6 @@ end
 --         self:showSelector()
 --     end
 -- end
-
-function Bookworm:onResume()
-    logger.info("Bookworm - onResume fired")
-end
 
 function Bookworm:onWakeupFromSleep()
     logger.info("Bookworm - onWakeupFromSleep fired")
